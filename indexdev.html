@@ -1,0 +1,240 @@
+
+<!doctype html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>INDEX</title>
+<style>
+	body {
+			width: 100%;
+			height: 100%;
+	}
+	#canvas {
+  		border: 1px solid gray;
+		/*z-index: 10;*/
+	}
+	#canvas_masu {
+		position: absolute;
+	  	margin-top: 1em;
+	  	margin-bottom: 1em;
+	  	margin-left: 2em;
+  		background: #FFFFFF;
+	}
+	#aaa {
+		/*position: absolute;
+		top: 0;
+		right: 0;
+		left: 0;
+		bottom: 0;*/
+		display: block;
+		width: 95%;
+		/*height: 5em;*/
+	}
+	#bbb {
+		width: 100%;
+		height: 15em;
+	}
+</style>
+
+</head>
+<body>
+	<div id="aaa">
+		<p>名前：</p>
+	  <div id="bbb">
+	  	<canvas id="canvas">残念ながらHTML5に対応していません</canvas>
+	  	<!-- <canvas id="canvas_masu">残念ながらHTML5に対応していません</canvas> -->
+	  </div>
+	  <button id="clear">クリア</button>
+	</div>
+	<div>
+		<!-- <form>			
+			<p>学年：<input type="text" id="grade"></p>
+			<p>出席番号：<input type="text" id="name"></p>
+		</form> -->
+		<button onclick="register()">登録</button>
+	</div>
+
+	<script type="text/javascript" src="js/jquery-3.2.1.min.js"></script>
+<script>
+	var oustr = "";
+	var uuid = (function(){
+	    var S4 = function() {
+	        return (((1+Math.random())*0x10000)|0).toString(16).substring(1);
+	    }
+	    return (S4()+S4()+"-"+S4()+"-"+S4()+"-"+S4()+"-"+S4()+S4() +S4());
+	})();
+	// console.log("uuid" + uuid);
+	var id = uuid;
+	// var storage = sessionStorage;
+	sessionStorage.setItem("uuidkey", id);
+	console.log(id);
+	function register() {
+	    var today = new Date();
+	    today.setDate(today.getDate());
+	    var yyyy = today.getFullYear();
+	    var mm = ("0"+(today.getMonth()+1)).slice(-2);
+	    var dd = ("0"+today.getDate()).slice(-2);
+	    var todaystr = yyyy+'_'+mm+'_'+dd;
+	}
+	function register() {
+			// oustr = todaystr + "," + document.getElementById("grade").value + "," + document.getElementById("name").value;
+			var saveCanvas = document.createElement('canvas').getContext('2d');
+			saveCanvas.canvas.width = w;
+			saveCanvas.canvas.height = h;
+			var image_byouga = new Image();
+			image_byouga.src　= ctx.canvas.toDataURL();
+			image_byouga.onload = function(){
+				saveCanvas.drawImage(image_byouga,0,0);
+				save2(saveCanvas);
+			}
+	}
+		//保存する
+	var save2 = function(context){
+		var can = context.canvas.toDataURL("image/png");
+		var idStr = "\n" + id + ",";
+		// console.log(can);
+		$.ajax({
+			type: "POST",
+			url: "record.php",
+			data: {
+				register: idStr
+			},
+			success:function (data) {
+			},
+			error:function (XMLHttpRequest, textStatus, errorThrown) {
+				// body...
+        	alert('Error : ' + errorThrown);
+			}
+		});
+		$.ajax({
+			type: "POST",
+			url: "save.php",
+			data: {
+				fileurl: can,
+				sikibetu: id
+			},
+			success:function (data) {
+				
+					location.href = "http://tktohoku.php.xdomain.jp/TMT/index2dev.html";
+			},
+			error:function (XMLHttpRequest, textStatus, errorThrown) {
+				// body...
+        	alert('Error : ' + errorThrown);
+			}
+		});
+		
+		// return false;
+	}
+
+	var draw = false;
+		//canvasの読み込み設定
+	var canvas = document.getElementById("canvas");
+	var ctx = canvas.getContext("2d");
+	// var canvas_masu = document.getElementById("canvas_masu");
+	// var ctx_masu = canvas_masu.getContext("2d");
+	//canvasの大きさの設定
+	var w = $('#bbb').width();
+	var h = $('#bbb').height();
+	$('#canvas').attr('width', w);
+	$('#canvas').attr('height', h);
+	$('#canvas_masu').attr('width', w);
+	$('#canvas_masu').attr('height', h);
+	//imageを読み込む
+	var img = new Image();
+	img.src = 'data/fig/name.png';
+	var canvas_masuX =0;
+	var canvas_masuY =0;
+	img.onload = function(){
+		ctx.drawImage(img, canvas_masuX, canvas_masuY, w, h);
+	}
+	//マウスの座標を取得する
+	canvas.addEventListener("mousemove",function(e) {
+	  var rect = e.target.getBoundingClientRect();  
+	  ctx.lineWidth = 10;
+	  ctx.globalAlpha = 100;
+	  mouseX = e.clientX - rect.left;
+	  mouseY = e.clientY - rect.top;
+	  console.log(mouseX + ":" + mouseY);
+	  //クリック状態なら描画をする
+	  if(draw === true) {
+	    ctx.beginPath();
+	    ctx.moveTo(mouseX1,mouseY1);
+	    ctx.lineTo(mouseX,mouseY);
+	    ctx.lineCap = "round";
+	    ctx.stroke();
+	    mouseX1 = mouseX;
+	    mouseY1 = mouseY;
+	  }
+    });
+	//クリックしたら描画をOKの状態にする
+	canvas.addEventListener("mousedown",function(e) {
+		draw = true;
+	    mouseX1 = mouseX;
+	    mouseY1 = mouseY;
+	    undoImage = ctx.getImageData(0, 0,canvas.width,canvas.height);
+	});
+	//クリックを離したら、描画を終了する
+	canvas.addEventListener("mouseup", function(e){
+		draw = false;
+	});
+
+	//マウスがcavasの外に行ったら
+	canvas.addEventListener("mouseout", function(e){
+		draw = false;
+	    console.log("out");
+	});
+	//スマホ用
+	var finger=new Array;
+	var sumaho = 0;
+	for(var i=0;i<10;i++){
+		finger[i]={
+			x:0,y:0,x1:0,y1:0,
+			color:"rgb("
+			+Math.floor(Math.random()*16)*15+","
+			+Math.floor(Math.random()*16)*15+","
+			+Math.floor(Math.random()*16)*15
+			+")"
+		};
+	}
+
+	//タッチした瞬間座標を取得
+	canvas.addEventListener("touchstart",function(e){
+		e.preventDefault();
+		var rect = e.target.getBoundingClientRect();
+		ctx.lineWidth = 10;
+		// ctx.globalAlpha = document.getElementById("alpha").value/100;
+		undoImage = ctx.getImageData(0, 0,canvas.width,canvas.height);
+		for(var i=0;i<finger.length;i++){
+			finger[i].x1 = e.touches[i].clientX-rect.left;
+			finger[i].y1 = e.touches[i].clientY-rect.top;
+		}
+		sumaho++;
+	});
+
+	//タッチして動き出したら描画
+	canvas.addEventListener("touchmove",function(e){
+		e.preventDefault();
+		var rect = e.target.getBoundingClientRect();
+		for(var i=0;i<finger.length;i++){
+			finger[i].x = e.touches[i].clientX-rect.left;
+			finger[i].y = e.touches[i].clientY-rect.top;
+			ctx.beginPath();			
+			ctx.moveTo(finger[i].x1,finger[i].y1);
+			ctx.lineTo(finger[i].x,finger[i].y);
+			ctx.lineCap="round";
+			ctx.stroke();
+			finger[i].x1=finger[i].x;
+			finger[i].y1=finger[i].y;
+			
+		}
+	});
+	//消去ボタンを起動する
+	$('#clear').click(function(e) {
+		// if(!confirm('本当に消去しますか？')) return;
+	    e.preventDefault();
+	    ctx.clearRect(0, 0, canvas.width, canvas.height);
+	});
+
+</script>
+</body>
+</html>
